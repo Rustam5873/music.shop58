@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Регистрация</title>
+    <link rel="icon" href="../Интернет-магазин музыкальных инструментов/images/guitar_icon.png" type="image/png">
+    <link rel="stylesheet" href="../Интернет-магазин музыкальных инструментов/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js" defer></script>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    MusicShop
+                </a>
+                <ul class="nav-links">
+                    <li><a href="index.html">Главная</a></li>
+                    <li><a href="catalog.html">Каталог</a></li>
+                    <li><a href="about.html">О нас</a></li>
+                    <li><a href="basket.html">Корзина</a></li>
+                    <li><a href="registration.html">Регистрация</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="registration-form">
+                <h1 class="section-title">Регистрация</h1>
+
+                <form id="registrationForm">
+                    <div class="form-group">
+                        <label for="fullName">ФИО *</label>
+                        <input type="text" id="fullName" name="fullName" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Телефон *</label>
+                        <input type="tel" id="phone" name="phone" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Пароль *</label>
+                        <input type="password" id="password" name="password" required minlength="6">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="confirmPassword">Подтверждение пароля *</label>
+                        <input type="password" id="confirmPassword" name="confirmPassword" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="terms" required>
+                            Я согласен с условиями использования и политикой конфиденциальности *
+                        </label>
+                    </div>
+
+                    <button type="submit" class="btn btn-secondary" style="width: 100%;" id="submitBtn">
+                        Зарегистрироваться
+                    </button>
+
+                    <div id="message" style="margin-top: 1rem; text-align: center;"></div>
+
+                    <p style="text-align: center; margin-top: 1rem;">
+                        Уже есть аккаунт? <a href="autorisation.html" style="color: #4361ee;">Войти</a>
+                    </p>
+                </form>
+
+                <div class="benefits" style="margin-top: 2rem; padding: 1rem; background: #f0f8ff; border-radius: 5px;">
+                    <h3>Преимущества регистрации:</h3>
+                    <ul style="margin-left: 1.5rem;">
+                        <li>Скидка 5% на первую покупку</li>
+                        <li>Доступ к закрытым распродажам</li>
+                        <li>История заказов</li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>MusicShop</h3>
+                    <p>© 2026 Все права защищены</p>
+                </div>
+                <ul class="footer-links">
+                    <li><a href="index.html">Главная</a></li>
+                    <li><a href="catalog.html">Каталог</a></li>
+                    <li><a href="about.html">О нас</a></li>
+                    <li><a href="basket.html"> Корзина </a></li>
+                    <li><a href="registration.html">Регистрация</a></li>
+                </ul>
+                <div class="social-icons">
+                    <a href="#" class="social-icon"><i class="fab fa-vk"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-telegram"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('registrationForm').addEventListener('submit', async function (e) {
+            e.preventDefault();
+    
+            const submitBtn = document.getElementById('submitBtn');
+            const messageDiv = document.getElementById('message');
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Регистрация...';
+            messageDiv.textContent = '';
+            messageDiv.style.color = '';
+    
+            const fullName = document.getElementById('fullName').value;
+            const email = document.getElementById('email').value;
+            const phone = document.getElementById('phone').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+    
+            if (password !== confirmPassword) {
+                messageDiv.textContent = '❌ Пароли не совпадают!';
+                messageDiv.style.color = 'red';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Зарегистрироваться';
+                return;
+            }
+    
+            if (password.length < 6) {
+                messageDiv.textContent = '❌ Пароль должен быть не менее 6 символов!';
+                messageDiv.style.color = 'red';
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Зарегистрироваться';
+                return;
+            }
+    
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: fullName,
+                            phone: phone
+                        }
+                    }
+                });
+    
+                if (error) {
+                    if (error.message.includes('already registered') || error.message.includes('User already registered')) {
+                        messageDiv.textContent = '⚠️ Пользователь уже существует. Пробуем войти...';
+                        messageDiv.style.color = 'orange';
+                        
+                        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                            email: email,
+                            password: password
+                        });
+                        
+                        if (signInError) {
+                            messageDiv.textContent = '❌ Ошибка входа: ' + signInError.message;
+                            messageDiv.style.color = 'red';
+                        } else {
+                            messageDiv.textContent = '✅ Вход выполнен! Этот email уже зарегистрирован.';
+                            messageDiv.style.color = 'green';
+                            
+                            // Перенаправляем через 2 секунды
+                            setTimeout(() => {
+                                window.location.href = 'index.html';
+                            }, 2000);
+                            return;
+                        }
+                    } else {
+                        throw error;
+                    }
+                }
+    
+                // 2. Если регистрация успешна
+                if (data && data.user) {
+                    messageDiv.innerHTML = `
+                        ✅ <strong>Регистрация успешна!</strong><br>
+                        Email: ${data.user.email}<br>
+                        <small>Автоматически выполняем вход...</small>
+                    `;
+                    messageDiv.style.color = 'green';
+                    
+                    // 3. Автоматически входим после регистрации
+                    setTimeout(async () => {
+                        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+                            email: email,
+                            password: password
+                        });
+                        
+                        if (signInError) {
+                            console.log('Ошибка автоматического входа:', signInError);
+                            // Перенаправляем на страницу входа
+                            window.location.href = 'autorisation.html';
+                        } else {
+                            // Перенаправляем на главную
+                            window.location.href = 'index.html';
+                        }
+                    }, 2000);
+                    
+                    // Очищаем форму
+                    document.getElementById('registrationForm').reset();
+                }
+    
+            } catch (error) {
+                console.error('Полная ошибка:', error);
+                messageDiv.textContent = '❌ Ошибка: ' + error.message;
+                messageDiv.style.color = 'red';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Зарегистрироваться';
+            }
+        });
+    
+        // Проверяем авторизацию при загрузке
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                // Если уже авторизован - перенаправляем
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>

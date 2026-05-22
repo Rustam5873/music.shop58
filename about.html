@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>О нас - MusicShop</title>
+
+    <link rel="icon" href="../Интернет-магазин музыкальных инструментов/images/guitar_icon.png" type="image/png">
+    <link rel="stylesheet" href="../Интернет-магазин музыкальных инструментов/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        .cart-count {
+            background: #ff4444;
+            color: white;
+            border-radius: 50%;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.8rem;
+            min-width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 5px;
+        }
+        
+        .reviews-section {
+            margin-top: 3rem;
+        }
+        
+        .reviews-title {
+            font-size: 1.8rem;
+            margin-bottom: 1.5rem;
+            color: #333;
+        }
+        
+        .review-card {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            border-left: 4px solid #4361ee;
+            transition: transform 0.2s;
+        }
+        
+        .review-card:hover {
+            transform: translateX(5px);
+        }
+        
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .review-author {
+            font-weight: 600;
+            color: #333;
+            font-size: 1.1rem;
+        }
+        
+        .review-date {
+            color: #999;
+            font-size: 0.85rem;
+        }
+        
+        .review-rating {
+            margin: 0.5rem 0;
+        }
+        
+        .review-rating i {
+            color: #ffc107;
+            margin-right: 2px;
+        }
+        
+        .review-text {
+            color: #555;
+            line-height: 1.5;
+            margin-top: 0.5rem;
+        }
+        
+        .review-status {
+            display: inline-block;
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            margin-left: 10px;
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .review-status.approved {
+            background: #28a745;
+            color: white;
+        }
+        
+        .review-status.pending {
+            background: #ffc107;
+            color: #333;
+        }
+        
+        .add-review-form {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin: 2rem 0;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 0.8rem;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .rating-select {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+        }
+        
+        .rating-stars {
+            display: flex;
+            gap: 0.3rem;
+            cursor: pointer;
+        }
+        
+        .rating-stars i {
+            font-size: 1.5rem;
+            color: #ddd;
+            transition: color 0.2s;
+        }
+        
+        .rating-stars i.active {
+            color: #ffc107;
+        }
+        
+        .btn-submit {
+            background: #4361ee;
+            color: white;
+            padding: 0.8rem 2rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: background 0.3s;
+        }
+        
+        .btn-submit:hover {
+            background: #3a56d4;
+        }
+        
+        .btn-submit:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 1rem 1.5rem;
+            border-radius: 5px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        .notification.success {
+            background: #28a745;
+            color: white;
+        }
+        
+        .notification.error {
+            background: #dc3545;
+            color: white;
+        }
+        
+        .notification.info {
+            background: #17a2b8;
+            color: white;
+        }
+        
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+        }
+        
+        .no-reviews {
+            text-align: center;
+            padding: 2rem;
+            color: #999;
+            background: #f8f9fa;
+            border-radius: 10px;
+        }
+        
+        .auth-warning {
+            background: #fff3cd;
+            border: 1px solid #ffc107;
+            color: #856404;
+            padding: 1rem;
+            border-radius: 5px;
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        
+        .auth-warning a {
+            color: #4361ee;
+            text-decoration: none;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    MusicShop
+                </a>
+                <ul class="nav-links">
+                    <li><a href="index.html">Главная</a></li>
+                    <li><a href="catalog.html">Каталог</a></li>
+                    <li><a href="about.html">О нас</a></li>
+                    <li><a href="basket.html">Корзина <span id="cartCount" class="cart-count" style="display: none;">0</span></a></li>
+                    <li id="authNavLink"><a href="autorisation.html">Вход</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="about-content">
+                <h1 class="section-title">О нашей компании</h1>
+
+                <h2>Наша история</h2>
+                <p>MusicShop был основан в 2010 году группой музыкантов, которые хотели создать место, где каждый мог бы
+                    найти идеальный инструмент для своего творчества. Начиная с маленького магазина,
+                    сегодня мы стали одним из крупнейших онлайн-магазинов музыкальных инструментов в России.</p>
+
+                <h2>Наша миссия</h2>
+                <p>Мы верим, что музыка должна быть доступна каждому. Наша цель - помочь музыкантам любого уровня найти
+                    инструменты, которые вдохновят их на создание прекрасной музыки.</p>
+
+                <h2>Наши ценности</h2>
+                <ul style="margin-left: 2rem; margin-bottom: 1rem;">
+                    <li><strong>Качество:</strong> Мы работаем только с проверенными производителями</li>
+                    <li><strong>Экспертиза:</strong> Наши консультанты - профессиональные музыканты</li>
+                    <li><strong>Доступность:</strong> Инструменты на любой бюджет</li>
+                    <li><strong>Сервис:</strong> Гарантия и постпродажное обслуживание</li>
+                </ul>
+
+                <h2>Наша команда</h2>
+                <p>В нашем магазине работают профессиональные музыканты с многолетним опытом. Мы не просто продаем
+                    инструменты - мы помогаем подобрать то, что подходит именно вам.</p>
+
+                <!-- Секция отзывов -->
+                <div class="reviews-section">
+                    <h2 class="reviews-title">Отзывы наших клиентов</h2>
+                    <div id="reviewsContainer">
+                        <div class="loading">
+                            <i class="fas fa-spinner fa-spin"></i> Загрузка отзывов...
+                        </div>
+                    </div>
+
+                    <!-- Форма добавления отзыва -->
+                    <div id="addReviewForm" class="add-review-form">
+                        <h3 style="margin-bottom: 1rem;">Оставить отзыв</h3>
+                        <div id="authWarning" style="display: none;" class="auth-warning">
+                            <i class="fas fa-info-circle"></i> 
+                            <a href="autorisation.html">Войдите в аккаунт</a>, чтобы оставить отзыв
+                        </div>
+                        
+                        <form id="reviewForm" style="display: none;">
+                            <div class="form-group">
+                                <label>Ваше имя *</label>
+                                <input type="text" id="reviewName" required placeholder="Введите ваше имя">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Email *</label>
+                                <input type="email" id="reviewEmail" required placeholder="your@email.com">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Оценка *</label>
+                                <div class="rating-stars" id="ratingStars">
+                                    <i class="far fa-star" data-rating="1"></i>
+                                    <i class="far fa-star" data-rating="2"></i>
+                                    <i class="far fa-star" data-rating="3"></i>
+                                    <i class="far fa-star" data-rating="4"></i>
+                                    <i class="far fa-star" data-rating="5"></i>
+                                </div>
+                                <input type="hidden" id="reviewRating" value="0">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Ваш отзыв *</label>
+                                <textarea id="reviewText" required placeholder="Поделитесь впечатлениями о нашем магазине..."></textarea>
+                            </div>
+                            
+                            <button type="submit" class="btn-submit">
+                                <i class="fas fa-paper-plane"></i> Отправить отзыв
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <div class="products-grid" style="margin-top: 2rem;">
+                    <div class="product-card">
+                        <div class="product-info">
+                            <h3>Контакты</h3>
+                            <p><i class="fas fa-map-marker-alt"></i> Пенза, ул. Калинина, 15</p>
+                            <p><i class="fas fa-phone"></i> +7 (495) 123-45-67</p>
+                            <p><i class="fas fa-envelope"></i> info@musicshop.ru</p>
+                        </div>
+                    </div>
+
+                    <div class="product-card">
+                        <div class="product-info">
+                            <h3>Часы работы</h3>
+                            <p><i class="fas fa-clock"></i> Пн-Пт: 10:00-20:00</p>
+                            <p><i class="fas fa-clock"></i> Сб-Вс: 11:00-18:00</p>
+                            <p>Онлайн-заказы: 24/7</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>MusicShop</h3>
+                    <p>© 2026 Все права защищены</p>
+                </div>
+                <ul class="footer-links">
+                    <li><a href="index.html">Главная</a></li>
+                    <li><a href="catalog.html">Каталог</a></li>
+                    <li><a href="about.html">О нас</a></li>
+                    <li><a href="basket.html">Корзина</a></li>
+                    <li><a href="registration.html">Регистрация</a></li>
+                </ul>
+                <div class="social-icons">
+                    <a href="#" class="social-icon"><i class="fab fa-vk"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-telegram"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        let currentUser = null;
+        let selectedRating = 0;
+
+        // Инициализация при загрузке страницы
+        document.addEventListener('DOMContentLoaded', async function() {
+            await checkAuth();
+            updateNavigation();
+            updateCartCount();
+            loadReviews();
+            setupRatingStars();
+            setupReviewForm();
+        });
+
+        // Проверка авторизации
+        async function checkAuth() {
+            const { data: { session } } = await supabase.auth.getSession();
+            currentUser = session?.user || null;
+            
+            const authWarning = document.getElementById('authWarning');
+            const reviewForm = document.getElementById('reviewForm');
+            
+            if (currentUser) {
+                authWarning.style.display = 'none';
+                reviewForm.style.display = 'block';
+                // Автозаполнение имени и email
+                document.getElementById('reviewName').value = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
+                document.getElementById('reviewEmail').value = currentUser.email;
+            } else {
+                authWarning.style.display = 'block';
+                reviewForm.style.display = 'none';
+            }
+        }
+
+        // Функция обновления навигации
+        function updateNavigation() {
+            const authNavLink = document.getElementById('authNavLink');
+            if (!authNavLink) return;
+            
+            supabase.auth.getSession().then(({ data: { session } }) => {
+                if (session) {
+                    authNavLink.innerHTML = `<a href="#" id="logoutBtn">Выйти (${session.user.email.split('@')[0]})</a>`;
+                    const logoutBtn = document.getElementById('logoutBtn');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', async (e) => {
+                            e.preventDefault();
+                            await supabase.auth.signOut();
+                            localStorage.removeItem('user');
+                            window.location.href = 'index.html';
+                        });
+                    }
+                } else {
+                    authNavLink.innerHTML = '<a href="autorisation.html">Вход</a>';
+                }
+            });
+        }
+
+        // Функция обновления счетчика корзины
+        async function updateCartCount() {
+            const { data: { session } } = await supabase.auth.getSession();
+            const cartCountElement = document.getElementById('cartCount');
+            
+            if (!session || !cartCountElement) {
+                if (cartCountElement) cartCountElement.style.display = 'none';
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('cart')
+                    .select('quantity')
+                    .eq('user_id', session.user.id);
+                
+                if (error) throw error;
+                
+                const totalItems = data.reduce((sum, item) => sum + item.quantity, 0);
+                
+                if (totalItems > 0) {
+                    cartCountElement.textContent = totalItems;
+                    cartCountElement.style.display = 'inline-flex';
+                } else {
+                    cartCountElement.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Ошибка обновления счетчика:', error);
+            }
+        }
+
+        // Загрузка одобренных отзывов
+        async function loadReviews() {
+            const container = document.getElementById('reviewsContainer');
+            
+            try {
+                const { data, error } = await supabase
+                    .from('reviews')
+                    .select('*')
+                    .eq('status', 'approved')
+                    .order('created_at', { ascending: false });
+                
+                if (error) throw error;
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<div class="no-reviews"><i class="fas fa-comment-dots"></i><p>Пока нет отзывов. Будьте первым!</p></div>';
+                    return;
+                }
+                
+                let html = '';
+                for (const review of data) {
+                    html += createReviewCard(review);
+                }
+                container.innerHTML = html;
+                
+            } catch (error) {
+                console.error('Ошибка загрузки отзывов:', error);
+                container.innerHTML = '<div class="no-reviews"><i class="fas fa-exclamation-triangle"></i><p>Ошибка загрузки отзывов</p></div>';
+            }
+        }
+
+        // Создание карточки отзыва
+        function createReviewCard(review) {
+            const date = new Date(review.created_at);
+            const formattedDate = date.toLocaleDateString('ru-RU');
+            
+            let starsHtml = '';
+            for (let i = 1; i <= 5; i++) {
+                starsHtml += `<i class="fas fa-star" style="color: ${i <= review.rating ? '#ffc107' : '#ddd'}"></i>`;
+            }
+            
+            return `
+                <div class="review-card">
+                    <div class="review-header">
+                        <span class="review-author">${escapeHtml(review.user_name)}</span>
+                        <span class="review-date">${formattedDate}</span>
+                    </div>
+                    <div class="review-rating">
+                        ${starsHtml}
+                    </div>
+                    <div class="review-text">
+                        "${escapeHtml(review.comment)}"
+                    </div>
+                </div>
+            `;
+        }
+
+        // Настройка звездочек рейтинга
+        function setupRatingStars() {
+            const stars = document.querySelectorAll('#ratingStars i');
+            
+            stars.forEach(star => {
+                star.addEventListener('mouseenter', function() {
+                    const rating = parseInt(this.dataset.rating);
+                    highlightStars(rating);
+                });
+                
+                star.addEventListener('mouseleave', function() {
+                    highlightStars(selectedRating);
+                });
+                
+                star.addEventListener('click', function() {
+                    selectedRating = parseInt(this.dataset.rating);
+                    document.getElementById('reviewRating').value = selectedRating;
+                    highlightStars(selectedRating);
+                    
+                    // Меняем иконки на solid
+                    stars.forEach(s => {
+                        if (parseInt(s.dataset.rating) <= selectedRating) {
+                            s.classList.remove('far');
+                            s.classList.add('fas');
+                        } else {
+                            s.classList.remove('fas');
+                            s.classList.add('far');
+                        }
+                    });
+                });
+            });
+        }
+        
+        function highlightStars(rating) {
+            const stars = document.querySelectorAll('#ratingStars i');
+            stars.forEach(star => {
+                const starRating = parseInt(star.dataset.rating);
+                if (starRating <= rating) {
+                    star.style.color = '#ffc107';
+                } else {
+                    star.style.color = '#ddd';
+                }
+            });
+        }
+
+        // Настройка формы отправки отзыва
+        function setupReviewForm() {
+            const form = document.getElementById('reviewForm');
+            if (!form) return;
+            
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                if (!currentUser) {
+                    showNotification('Войдите в аккаунт, чтобы оставить отзыв', 'error');
+                    window.location.href = 'autorisation.html';
+                    return;
+                }
+                
+                const name = document.getElementById('reviewName').value.trim();
+                const email = document.getElementById('reviewEmail').value.trim();
+                const rating = selectedRating;
+                const comment = document.getElementById('reviewText').value.trim();
+                
+                if (!name || !email || rating === 0 || !comment) {
+                    showNotification('Заполните все поля и выберите оценку!', 'error');
+                    return;
+                }
+                
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                
+                try {
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Отправка...';
+                    submitBtn.disabled = true;
+                    
+                    const { data, error } = await supabase
+                        .from('reviews')
+                        .insert([{
+                            user_name: name,
+                            user_email: email,
+                            rating: rating,
+                            comment: comment,
+                            status: 'pending', // Ожидает модерации
+                            created_at: new Date().toISOString()
+                        }]);
+                    
+                    if (error) throw error;
+                    
+                    showNotification('Спасибо за отзыв! Он будет опубликован после проверки модератором.', 'success');
+                    
+                    // Очищаем форму
+                    document.getElementById('reviewText').value = '';
+                    selectedRating = 0;
+                    document.getElementById('reviewRating').value = 0;
+                    highlightStars(0);
+                    
+                    // Сбрасываем звезды на пустые
+                    const stars = document.querySelectorAll('#ratingStars i');
+                    stars.forEach(star => {
+                        star.classList.remove('fas');
+                        star.classList.add('far');
+                        star.style.color = '#ddd';
+                    });
+                    
+                } catch (error) {
+                    console.error('Ошибка отправки отзыва:', error);
+                    showNotification('Ошибка при отправке отзыва. Попробуйте позже.', 'error');
+                } finally {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                }
+            });
+        }
+
+        // Показать уведомление
+        function showNotification(message, type = 'success') {
+            const oldNotifications = document.querySelectorAll('.notification');
+            oldNotifications.forEach(n => n.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${message}`;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 4000);
+        }
+
+        // Защита от XSS
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+    </script>
+</body>
+
+</html>

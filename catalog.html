@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Каталог товаров - MusicShop</title>
+    <link rel="icon" href="images/guitar_icon.png" type="image/png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+    <style>
+        .loading {
+            text-align: center;
+            padding: 2rem;
+            font-size: 1.2rem;
+            color: #666;
+            grid-column: 1 / -1;
+        }
+        
+        .error {
+            text-align: center;
+            padding: 2rem;
+            color: #dc3545;
+            background: #f8d7da;
+            border-radius: 8px;
+            margin: 1rem 0;
+            grid-column: 1 / -1;
+        }
+        
+        .retry-btn {
+            margin-top: 1rem;
+            padding: 0.5rem 1rem;
+            background: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+        
+        .retry-btn:hover {
+            background: #c82333;
+        }
+        
+        .cart-count {
+            background: #ff4444;
+            color: white;
+            border-radius: 50%;
+            padding: 0.2rem 0.5rem;
+            font-size: 0.8rem;
+            min-width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-left: 5px;
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4CAF50;
+            color: white;
+            padding: 1rem 1.5rem;
+            border-radius: 5px;
+            z-index: 1000;
+            animation: slideIn 0.3s ease-out;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            max-width: 300px;
+        }
+        
+        .notification.error {
+            background: #ff4444;
+        }
+        
+        .notification.info {
+            background: #2196F3;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        @keyframes slideOut {
+            from { transform: translateX(0); opacity: 1; }
+            to { transform: translateX(100%); opacity: 0; }
+        }
+        
+        .product-img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 8px;
+            background: #f5f5f5;
+        }
+        
+        /* Стили для кнопки добавления */
+        .add-to-cart-btn {
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .add-to-cart-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">MusicShop</a>
+                <ul class="nav-links">
+                    <li><a href="index.html">Главная</a></li>
+                    <li><a href="catalog.html">Каталог</a></li>
+                    <li><a href="about.html">О нас</a></li>
+                    <li>
+                        <a href="basket.html">
+                            Корзина <span id="cartCount" class="cart-count" style="display: none;">0</span>
+                        </a>
+                    </li>
+                    <li id="authNavLink"><a href="autorisation.html">Вход</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <h1 class="section-title">Каталог товаров</h1>
+
+            <div class="categories">
+                <button class="category-btn active" data-category="all">Все товары</button>
+                <button class="category-btn" data-category="guitars">Гитары</button>
+                <button class="category-btn" data-category="keyboards">Клавишные</button>
+                <button class="category-btn" data-category="drums">Ударные</button>
+                <button class="category-btn" data-category="wind">Духовые</button>
+            </div>
+
+            <div id="productsContainer" class="products-grid">
+                <div class="loading" id="loading">
+                    <i class="fas fa-spinner fa-spin"></i> Загрузка товаров...
+                </div>
+            </div>
+
+            <div id="errorMessage" class="error" style="display: none;"></div>
+
+            <div style="text-align: center; margin-top: 3rem;">
+                <a href="basket.html" class="btn btn-secondary">
+                    <i class="fas fa-shopping-cart"></i> Перейти в корзину
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>Интернет-магазин музыкальных инструментов</h3>
+                    <p>© 2026 Все права защищены</p>
+                </div>
+                <ul class="footer-links">
+                    <li><a href="index.html">Главная</a></li>
+                    <li><a href="catalog.html">Каталог</a></li>
+                    <li><a href="about.html">О нас</a></li>
+                    <li><a href="basket.html">Корзина</a></li>
+                    <li><a href="registration.html">Регистрация</a></li>
+                </ul>
+                <div class="social-icons">
+                    <a href="#" class="social-icon"><i class="fab fa-vk"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-telegram"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Глобальные переменные
+        let allProducts = [];
+        let currentUser = null;
+
+        // Инициализация
+        document.addEventListener('DOMContentLoaded', async function() {
+            await checkAuth();
+            await loadProducts();
+            setupCategoryFilters();
+            updateNavigation();
+        });
+
+        // Проверка авторизации
+        async function checkAuth() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    currentUser = session.user;
+                    console.log('👤 Пользователь авторизован:', currentUser.email);
+                } else {
+                    console.log('👤 Пользователь не авторизован');
+                }
+            } catch (error) {
+                console.error('Ошибка проверки авторизации:', error);
+            }
+        }
+
+        // Обновление навигации
+        function updateNavigation() {
+            const authNavLink = document.getElementById('authNavLink');
+            if (!authNavLink) return;
+            
+            supabase.auth.getSession().then(({ data: { session } }) => {
+                if (session) {
+                    authNavLink.innerHTML = `<a href="#" id="logoutBtn">Выйти (${session.user.email.split('@')[0]})</a>`;
+                    const logoutBtn = document.getElementById('logoutBtn');
+                    if (logoutBtn) {
+                        logoutBtn.addEventListener('click', async (e) => {
+                            e.preventDefault();
+                            await supabase.auth.signOut();
+                            localStorage.removeItem('user');
+                            window.location.href = 'index.html';
+                        });
+                    }
+                } else {
+                    authNavLink.innerHTML = '<a href="login.html">Вход</a>';
+                }
+            });
+        }
+
+        // Загрузка товаров
+        async function loadProducts() {
+            const loadingElement = document.getElementById('loading');
+            const errorElement = document.getElementById('errorMessage');
+            const productsContainer = document.getElementById('productsContainer');
+
+            try {
+                loadingElement.style.display = 'block';
+                loadingElement.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Загрузка товаров...';
+                errorElement.style.display = 'none';
+
+                console.log('📡 Запрос товаров из Supabase...');
+                
+                const { data, error } = await supabase
+                    .from('products')
+                    .select('*');
+
+                if (error) {
+                    console.error('❌ Ошибка Supabase:', error);
+                    throw error;
+                }
+
+                console.log('✅ Получено товаров:', data?.length || 0);
+                
+                allProducts = data || [];
+                renderProducts(allProducts);
+                
+                loadingElement.style.display = 'none';
+
+            } catch (error) {
+                console.error('❌ Ошибка загрузки товаров:', error);
+                
+                errorElement.style.display = 'block';
+                errorElement.innerHTML = `
+                    <p>Ошибка загрузки товаров. Проверьте подключение к интернету.</p>
+                    <button onclick="retryLoadProducts()" class="retry-btn">
+                        <i class="fas fa-redo"></i> Попробовать снова
+                    </button>
+                    <button onclick="loadFallbackProducts()" class="retry-btn" style="margin-left: 10px; background: #6c757d;">
+                        <i class="fas fa-box"></i> Показать демо-товары
+                    </button>
+                `;
+                
+                loadingElement.style.display = 'none';
+            }
+        }
+
+        // Повторная попытка
+        window.retryLoadProducts = async function() {
+            console.log('🔄 Повторная попытка загрузки...');
+            const errorElement = document.getElementById('errorMessage');
+            errorElement.style.display = 'none';
+            await loadProducts();
+        }
+
+        // Демо-товары
+        window.loadFallbackProducts = function() {
+            console.log('📦 Загрузка демо-товаров...');
+            
+            const fallbackProducts = [
+                { id: '1', name: 'Электрогитара Fender Stratocaster', price: 45000, description: 'Американская классика с катушечными датчиками', category: 'guitars', stock: 5 },
+                { id: '2', name: 'Акустическая гитара Yamaha', price: 18000, description: 'Отличный выбор для начинающих', category: 'guitars', stock: 10 },
+                { id: '3', name: 'Синтезатор Yamaha PSR-E373', price: 32000, description: '61 клавиша, 622 тембра, автоаккомпанемент', category: 'keyboards', stock: 3 },
+                { id: '4', name: 'Цифровое пианино Casio', price: 42000, description: '88 взвешенных клавиш, натуральное звучание', category: 'keyboards', stock: 2 },
+                { id: '5', name: 'Барабанная установка Pearl', price: 68000, description: '5-томовая комплектация, хай-хэт, тарелки', category: 'drums', stock: 1 },
+                { id: '6', name: 'Электронная ударная установка', price: 55000, description: 'Компактный размер, 200 звуков, наушники в комплекте', category: 'drums', stock: 4 },
+                { id: '7', name: 'Саксофон альт Yamaha', price: 85000, description: 'Профессиональный инструмент, лакированный корпус', category: 'wind', stock: 2 },
+                { id: '8', name: 'Флейта Pearl', price: 25000, description: 'Серебряное покрытие, кейс и аксессуары в комплекте', category: 'wind', stock: 7 }
+            ];
+            
+            allProducts = fallbackProducts;
+            renderProducts(fallbackProducts);
+            
+            const loadingElement = document.getElementById('loading');
+            loadingElement.style.display = 'none';
+            
+            showNotification('Используются демо-товары', 'info');
+        }
+
+        // Отображение товаров
+        function renderProducts(products) {
+            const productsContainer = document.getElementById('productsContainer');
+            
+            if (!products || products.length === 0) {
+                productsContainer.innerHTML = `<div style="text-align: center; padding: 3rem;">Товары не найдены</div>`;
+                return;
+            }
+            
+            productsContainer.innerHTML = '';
+            
+            products.forEach(product => {
+                const productCard = createProductCard(product);
+                productsContainer.appendChild(productCard);
+            });
+        }
+
+        // Создание карточки товара
+        function createProductCard(product) {
+            const card = document.createElement('div');
+            card.className = 'product-card';
+            card.setAttribute('data-category', product.category || 'all');
+            card.setAttribute('data-product-id', product.id);
+            
+            const formattedPrice = new Intl.NumberFormat('ru-RU').format(product.price);
+            const imageUrl = product.image_url || getDefaultImage(product.category);
+            
+            card.innerHTML = `
+                <img src="${imageUrl}" 
+                     alt="${product.name}" 
+                     class="product-img"
+                     loading="lazy"
+                     onerror="this.onerror=null; this.src='${getDefaultImage(product.category)}';">
+                <div class="product-info">
+                    <h3>${escapeHtml(product.name)}</h3>
+                    <p class="price">${formattedPrice} ₽</p>
+                    <p>${escapeHtml(product.description) || 'Описание отсутствует'}</p>
+                    ${product.stock ? `<p style="color: #28a745; font-size: 0.9rem; margin-top: 0.5rem;">
+                        <i class="fas fa-check"></i> В наличии: ${product.stock} шт.
+                    </p>` : ''}
+                    <button class="btn add-to-cart-btn" data-product-id="${product.id}">
+                        <i class="fas fa-cart-plus"></i> В корзину
+                    </button>
+                </div>
+            `;
+            
+            // Навешиваем обработчик на кнопку
+            const btn = card.querySelector('.add-to-cart-btn');
+            btn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                await addToCart(product.id);
+            });
+            
+            return card;
+        }
+
+        // Добавление в корзину (через Supabase)
+        async function addToCart(productId) {
+            // Проверяем авторизацию
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (!session) {
+                if (confirm('Для добавления товаров в корзину нужно войти в аккаунт. Перейти на страницу входа?')) {
+                    window.location.href = 'autorisation.html';
+                }
+                return false;
+            }
+            
+            // Находим кнопку для анимации
+            const button = document.querySelector(`.add-to-cart-btn[data-product-id="${productId}"]`);
+            const originalText = button.innerHTML;
+            
+            try {
+                // Показываем загрузку
+                button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Добавление...';
+                button.disabled = true;
+                
+                // Добавляем/обновляем товар в корзине
+                const { error } = await supabase
+                    .from('cart')
+                    .upsert({
+                        user_id: session.user.id,
+                        product_id: productId,
+                        quantity: 1
+                    }, {
+                        onConflict: 'user_id, product_id'
+                    });
+                
+                if (error) throw error;
+                
+                // Успех
+                button.innerHTML = '<i class="fas fa-check"></i> Добавлено!';
+                button.style.background = '#28a745';
+                
+                showNotification('Товар добавлен в корзину!', 'success');
+                
+                // Обновляем счетчик корзины
+                await updateCartCount();
+                
+                // Возвращаем кнопку в исходное состояние
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.background = '';
+                    button.disabled = false;
+                }, 2000);
+                
+                return true;
+                
+            } catch (error) {
+                console.error('Ошибка добавления:', error);
+                button.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Ошибка';
+                button.style.background = '#dc3545';
+                
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.background = '';
+                    button.disabled = false;
+                }, 2000);
+                
+                showNotification('Ошибка при добавлении товара', 'error');
+                return false;
+            }
+        }
+
+        // Обновление счетчика корзины
+        async function updateCartCount() {
+            const { data: { session } } = await supabase.auth.getSession();
+            const cartCountElement = document.getElementById('cartCount');
+            
+            if (!session || !cartCountElement) {
+                if (cartCountElement) cartCountElement.style.display = 'none';
+                return;
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('cart')
+                    .select('quantity')
+                    .eq('user_id', session.user.id);
+                
+                if (error) throw error;
+                
+                const totalItems = data.reduce((sum, item) => sum + item.quantity, 0);
+                
+                if (totalItems > 0) {
+                    cartCountElement.textContent = totalItems;
+                    cartCountElement.style.display = 'inline-flex';
+                } else {
+                    cartCountElement.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Ошибка обновления счетчика:', error);
+            }
+        }
+
+        // Получение изображения по умолчанию
+        function getDefaultImage(category) {
+            const defaultImages = {
+                'guitars': 'https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
+                'keyboards': 'https://images.unsplash.com/photo-1519892300165-cb5542fb47c7?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
+                'drums': 'https://images.unsplash.com/photo-1556228453-efd6c1ff04f6?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80',
+                'wind': 'https://images.unsplash.com/photo-1571974096035-b4f8b0034e53?ixlib=rb-1.2.1&auto=format&fit=crop&w=600&q=80'
+            };
+            return defaultImages[category] || defaultImages.guitars;
+        }
+
+        // Настройка фильтров
+        function setupCategoryFilters() {
+            const categoryButtons = document.querySelectorAll('.category-btn');
+            
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    categoryButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+                    
+                    const category = button.getAttribute('data-category');
+                    filterProductsByCategory(category);
+                });
+            });
+        }
+
+        // Фильтрация
+        function filterProductsByCategory(category) {
+            const allCards = document.querySelectorAll('.product-card');
+            
+            allCards.forEach(card => {
+                if (category === 'all' || card.getAttribute('data-category') === category) {
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+        }
+
+        // Показать уведомление
+        function showNotification(message, type = 'success') {
+            const oldNotifications = document.querySelectorAll('.notification');
+            oldNotifications.forEach(notification => notification.remove());
+            
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : type === 'error' ? 'fa-exclamation-circle' : 'fa-info-circle'}"></i> ${message}`;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease-out';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Защита от XSS
+        function escapeHtml(str) {
+            if (!str) return '';
+            return str.replace(/[&<>]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
+            });
+        }
+    </script>
+</body>
+</html>

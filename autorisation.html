@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Вход</title>
+    <link rel="icon" href="../Интернет-магазин музыкальных инструментов/images/guitar_icon.png" type="image/png">
+    <link rel="stylesheet" href="../Интернет-магазин музыкальных инструментов/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="supabase-config.js"></script>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav>
+                <a href="index.html" class="logo">
+                    MusicShop
+                </a>
+                <ul class="nav-links">
+                    <li><a href="index.html">Главная</a></li>
+                    <li><a href="catalog.html">Каталог</a></li>
+                    <li><a href="about.html">О нас</a></li>
+                    <li><a href="basket.html">Корзина</a></li>
+                    <li><a href="registration.html">Регистрация</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <div class="container">
+            <section class="registration-form">
+                <h1 class="section-title">Вход в аккаунт</h1>
+
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="email">Email *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="password">Пароль *</label>
+                        <input type="password" id="password" name="password" required>
+                    </div>
+
+                    <button type="submit" class="btn btn-secondary" style="width: 100%;">
+                        Войти
+                    </button>
+                    
+                    <div id="loginMessage" style="text-align: center; margin-top: 1rem;"></div>
+                    
+                    <p style="text-align: center; margin-top: 1rem;">
+                        Ещё нет аккаунта? <a href="registration.html" style="color: #4361ee;">Регистрация</a>
+                    </p>
+                </form>
+
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-info">
+                    <h3>MusicShop</h3>
+                    <p>© 2024 Все права защищены</p>
+                </div>
+                <ul class="footer-links">
+                    <li><a href="index.html">Главная</a></li>
+                    <li><a href="catalog.html">Каталог</a></li>
+                    <li><a href="about.html">О нас</a></li>
+                    <li><a href="basket.html">Корзина</a></li>
+                    <li><a href="registration.html">Регистрация</a></li>
+                </ul>
+                <div class="social-icons">
+                    <a href="#" class="social-icon"><i class="fab fa-vk"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-telegram"></i></a>
+                    <a href="#" class="social-icon"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.getElementById('loginForm');
+            
+            if (!loginForm) {
+                console.error('❌ Форма входа не найдена! Проверь id="loginForm"');
+                return;
+            }
+            
+            loginForm.addEventListener('submit', async function(e) {
+                e.preventDefault();
+                
+                const email = document.getElementById('email').value;
+                const password = document.getElementById('password').value;
+                const messageDiv = document.getElementById('loginMessage');
+                
+                if (!messageDiv) {
+                    alert('Ошибка: элемент для сообщений не найден');
+                    return;
+                }
+                
+                messageDiv.textContent = 'Вход...';
+                messageDiv.style.color = 'blue';
+                
+                try {
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    
+                    if (error) {
+                        if (error.message.includes('Invalid login credentials')) {
+                            messageDiv.textContent = '❌ Неверный email или пароль';
+                        } else if (error.message.includes('Email not confirmed')) {
+                            messageDiv.textContent = '❌ Email не подтвержден';
+                        } else {
+                            messageDiv.textContent = '❌ Ошибка: ' + error.message;
+                        }
+                        messageDiv.style.color = 'red';
+                        return;
+                    }
+                    
+                    messageDiv.textContent = '✅ Вход успешен! Перенаправляем...';
+                    messageDiv.style.color = 'green';
+                    
+                    // Сохраняем данные пользователя
+                    const userData = {
+                        id: data.user.id,
+                        email: data.user.email
+                    };
+                    
+                    // Получаем роль пользователя
+                    try {
+                        const { data: roleData } = await supabase
+                            .from('users')
+                            .select('role')
+                            .eq('id', data.user.id)
+                            .single();
+                        
+                        if (roleData) {
+                            userData.role = roleData.role;
+                        }
+                    } catch (err) {
+                        console.log('Роль не найдена, установлена по умолчанию');
+                        userData.role = 'user';
+                    }
+                    
+                    localStorage.setItem('user', JSON.stringify(userData));
+                    
+                    setTimeout(() => {
+                        if (userData.role === 'admin') {
+                            window.location.href = 'admin_dashboard.html';
+                        } else {
+                            window.location.href = 'index.html';
+                        }
+                    }, 1000);
+                    
+                } catch (error) {
+                    console.error('Общая ошибка при входе:', error);
+                    messageDiv.textContent = '❌ Ошибка соединения с сервером';
+                    messageDiv.style.color = 'red';
+                }
+            });
+        });
+        
+        // Проверяем авторизацию
+        supabase.auth.getSession().then(({ data: { session } }) => {
+            if (session) {
+                console.log('Уже авторизован как:', session.user.email);
+                // Если уже авторизован, редиректим на главную
+                window.location.href = 'index.html';
+            }
+        });
+    </script>
+</body>
+</html>
